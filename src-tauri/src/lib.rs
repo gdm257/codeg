@@ -1248,7 +1248,8 @@ mod tauri_app {
                 // Workspace state (open folders, opened tabs, active tab) is
                 // restored by the frontend via `list_open_folder_details` /
                 // `list_opened_tabs` inside the main window.
-                let silent_start = crate::preferences::load().silent_start;
+                let silent_start =
+                    crate::preferences::load().silent_start && windows::can_hide_to_tray();
                 if app.get_webview_window("main").is_none() {
                     let url = tauri::WebviewUrl::App(workspace_path.into());
                     let builder = tauri::WebviewWindowBuilder::new(app, "main", url)
@@ -1723,7 +1724,7 @@ mod tauri_app {
                 project_boot::install_hyperframes_skills,
                 project_boot::create_hyperframes_project,
                 system_settings::get_system_proxy_settings,
-                system_settings::update_system_rendering_settings,
+                system_settings::update_system_proxy_settings,
                 system_settings::get_system_silent_start_settings,
                 system_settings::update_system_silent_start_settings,
                 system_settings::get_system_language_settings,

@@ -59,6 +59,7 @@ import type {
   SystemProxySettings,
   SystemRenderingSettings,
   SystemSilentStartSettings,
+  SystemSilentStartSettingsView,
   SystemAutostartSettings,
   SystemTerminalSettings,
   GitCredentials,
@@ -390,13 +391,13 @@ export async function updateSystemAutostartSettings(
   return invoke("update_system_autostart_settings", { settings })
 }
 
-export async function getSystemSilentStartSettings(): Promise<SystemSilentStartSettings> {
+export async function getSystemSilentStartSettings(): Promise<SystemSilentStartSettingsView> {
   return invoke("get_system_silent_start_settings")
 }
 
 export async function updateSystemSilentStartSettings(
   settings: SystemSilentStartSettings
-): Promise<SystemSilentStartSettings> {
+): Promise<SystemSilentStartSettingsView> {
   return invoke("update_system_silent_start_settings", { settings })
 }
 

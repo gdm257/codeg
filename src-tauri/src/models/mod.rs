@@ -56,6 +56,7 @@ pub use work_task::{
 pub use system::{
     CloseWindowBehavior, SystemAutostartSettings, SystemCloseBehaviorSettings,
     SystemCloseBehaviorSettingsView, SystemRenderingSettings, SystemSilentStartSettings,
+    SystemSilentStartSettingsView,
 };
 pub use system::{
     AvailableTerminalShells, GitCredentials, GitDetectResult, GitHubAccount,

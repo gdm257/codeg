@@ -135,6 +135,7 @@ export function SystemNetworkSettings() {
   // hiding a setting the user came looking for.
   const [autostartError, setAutostartError] = useState<string | null>(null)
   const [silentStartEnabled, setSilentStartEnabled] = useState(false)
+  const [silentStartTrayAvailable, setSilentStartTrayAvailable] = useState(true)
   const [savingSilentStart, setSavingSilentStart] = useState(false)
 
   // Both halves of the update flow — "is a newer release out there" and the
@@ -297,6 +298,7 @@ export function SystemNetworkSettings() {
       }
       if (silentStart) {
         setSilentStartEnabled(silentStart.silent_start)
+        setSilentStartTrayAvailable(silentStart.tray_available)
       }
     } catch (err) {
       const message = toErrorMessage(err)
@@ -743,7 +745,7 @@ export function SystemNetworkSettings() {
           </SettingsSection>
         )}
 
-        {autostartVisible && (
+        {autostartVisible && silentStartTrayAvailable && (
           <SettingsSection
             icon={VolumeX}
             title={t("silentStartTitle")}

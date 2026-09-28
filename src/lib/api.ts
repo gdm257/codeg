@@ -153,6 +153,7 @@ import type {
   SystemRenderingSettings,
   SystemAutostartSettings,
   SystemSilentStartSettings,
+  SystemSilentStartSettingsView,
   SystemTerminalSettings,
   LogSettings,
   LogSettingsView,
@@ -1848,13 +1849,13 @@ export async function updateSystemAutostartSettings(
   return getTransport().call("update_system_autostart_settings", { settings })
 }
 
-export async function getSystemSilentStartSettings(): Promise<SystemSilentStartSettings> {
+export async function getSystemSilentStartSettings(): Promise<SystemSilentStartSettingsView> {
   return getTransport().call("get_system_silent_start_settings")
 }
 
 export async function updateSystemSilentStartSettings(
   settings: SystemSilentStartSettings
-): Promise<SystemSilentStartSettings> {
+): Promise<SystemSilentStartSettingsView> {
   return getTransport().call("update_system_silent_start_settings", {
     settings,
   })

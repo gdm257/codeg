@@ -3806,6 +3806,15 @@ export interface SystemSilentStartSettings {
   silent_start: boolean
 }
 
+/** What the settings UI reads: the stored preference plus a live platform
+ * capability, same shape of pairing as {@link SystemCloseBehaviorSettingsView}.
+ * Where the tray is unusable (Linux without one) a silent start would strand
+ * the workspace, so the UI hides the toggle there. */
+export interface SystemSilentStartSettingsView {
+  silent_start: boolean
+  tray_available: boolean
+}
+
 /**
  * What the main window's close button does.
  *

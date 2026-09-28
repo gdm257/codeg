@@ -13,6 +13,7 @@ use crate::db::AppDatabase;
 use crate::models::{
     CloseWindowBehavior, SystemAutostartSettings, SystemCloseBehaviorSettings,
     SystemCloseBehaviorSettingsView, SystemRenderingSettings, SystemSilentStartSettings,
+    SystemSilentStartSettingsView,
 };
 use crate::models::{
     AvailableTerminalShells, SystemLanguageSettings, SystemProxySettings, SystemTerminalSettings,
@@ -813,10 +814,11 @@ pub async fn update_system_rendering_settings(
 
 #[cfg(feature = "tauri-runtime")]
 #[cfg_attr(feature = "tauri-runtime", tauri::command)]
-pub async fn get_system_silent_start_settings() -> Result<SystemSilentStartSettings, AppCommandError> {
+pub async fn get_system_silent_start_settings() -> Result<SystemSilentStartSettingsView, AppCommandError> {
     let prefs = preferences::load();
-    Ok(SystemSilentStartSettings {
+    Ok(SystemSilentStartSettingsView {
         silent_start: prefs.silent_start,
+        tray_available: crate::commands::windows::can_hide_to_tray(),
     })
 }
 
@@ -824,14 +826,17 @@ pub async fn get_system_silent_start_settings() -> Result<SystemSilentStartSetti
 #[cfg_attr(feature = "tauri-runtime", tauri::command)]
 pub async fn update_system_silent_start_settings(
     settings: SystemSilentStartSettings,
-) -> Result<SystemSilentStartSettings, AppCommandError> {
+) -> Result<SystemSilentStartSettingsView, AppCommandError> {
     let mut prefs = preferences::load();
     prefs.silent_start = settings.silent_start;
     preferences::save(&prefs).map_err(|err| {
         AppCommandError::io_error("Failed to persist silent start settings")
             .with_detail(err.to_string())
     })?;
-    Ok(settings)
+    Ok(SystemSilentStartSettingsView {
+        silent_start: settings.silent_start,
+        tray_available: crate::commands::windows::can_hide_to_tray(),
+    })
 }
 
 /// Reach for the manager through `try_state` rather than the plugin's

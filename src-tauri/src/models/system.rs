@@ -177,6 +177,19 @@ pub struct SystemSilentStartSettings {
     pub silent_start: bool,
 }
 
+/// What the settings UI reads: the stored preference plus a live platform
+/// capability, same shape of pairing as `SystemCloseBehaviorSettingsView`.
+/// Where the tray is unusable a
+/// silent start would strand the workspace (no window, no tray icon), so the
+/// UI hides the toggle and the cold-start path ignores the preference.
+#[cfg(feature = "tauri-runtime")]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct SystemSilentStartSettingsView {
+    pub silent_start: bool,
+    pub tray_available: bool,
+}
+
 // --- Version Control ---
 
 /// Explicit credentials for a single git remote operation.

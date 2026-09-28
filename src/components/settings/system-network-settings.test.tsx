@@ -148,8 +148,14 @@ beforeEach(() => {
   mockSetAutostart.mockReset()
   mockGetSilentStart.mockReset()
   mockSetSilentStart.mockReset()
-  mockGetSilentStart.mockResolvedValue({ silent_start: false })
-  mockSetSilentStart.mockResolvedValue({ silent_start: false })
+  mockGetSilentStart.mockResolvedValue({
+    silent_start: false,
+    tray_available: true,
+  })
+  mockSetSilentStart.mockResolvedValue({
+    silent_start: false,
+    tray_available: true,
+  })
   desktopShell = false
   remoteWorkspace = false
   liveHandler = null
@@ -666,10 +672,27 @@ describe("SystemNetworkSettings — silent start", () => {
     expect(mockGetSilentStart).not.toHaveBeenCalled()
   })
 
+  it("hides the section where the tray is unusable", async () => {
+    desktopShell = true
+    mockGetAutostart.mockResolvedValue({ enabled: false })
+    mockGetSilentStart.mockResolvedValue({
+      silent_start: true,
+      tray_available: false,
+    })
+
+    renderWithIntl()
+
+    await screen.findByRole("heading", { name: "Launch at login" })
+    expect(screen.queryByLabelText("Silent start")).not.toBeInTheDocument()
+  })
+
   it("persists the toggle and reflects the stored value on reload", async () => {
     desktopShell = true
     mockGetAutostart.mockResolvedValue({ enabled: false })
-    mockGetSilentStart.mockResolvedValue({ silent_start: true })
+    mockGetSilentStart.mockResolvedValue({
+      silent_start: true,
+      tray_available: true,
+    })
 
     renderWithIntl()
 
