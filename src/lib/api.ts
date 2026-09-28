@@ -152,6 +152,7 @@ import type {
   SystemCloseBehaviorSettingsView,
   SystemRenderingSettings,
   SystemAutostartSettings,
+  SystemSilentStartSettings,
   SystemTerminalSettings,
   LogSettings,
   LogSettingsView,
@@ -1845,6 +1846,18 @@ export async function updateSystemAutostartSettings(
   settings: SystemAutostartSettings
 ): Promise<SystemAutostartSettings> {
   return getTransport().call("update_system_autostart_settings", { settings })
+}
+
+export async function getSystemSilentStartSettings(): Promise<SystemSilentStartSettings> {
+  return getTransport().call("get_system_silent_start_settings")
+}
+
+export async function updateSystemSilentStartSettings(
+  settings: SystemSilentStartSettings
+): Promise<SystemSilentStartSettings> {
+  return getTransport().call("update_system_silent_start_settings", {
+    settings,
+  })
 }
 
 // --- Close window behavior ---

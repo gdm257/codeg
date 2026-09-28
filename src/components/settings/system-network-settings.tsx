@@ -15,6 +15,7 @@ import {
   Power,
   RefreshCw,
   RotateCcw,
+  VolumeX,
   Wifi,
 } from "lucide-react"
 import { useLocale, useTranslations } from "next-intl"
@@ -47,9 +48,11 @@ import { Switch } from "@/components/ui/switch"
 import {
   getSystemAutostartSettings,
   getSystemProxySettings,
+  getSystemSilentStartSettings,
   updateSystemAutostartSettings,
   updateSystemLanguageSettings,
   updateSystemProxySettings,
+  updateSystemSilentStartSettings,
 } from "@/lib/api"
 import { isLocalDesktop, openUrl } from "@/lib/platform"
 import type { AppLocale } from "@/lib/types"
@@ -131,6 +134,8 @@ export function SystemNetworkSettings() {
   // locked-down registry, …). The row stays on screen but inert, which beats
   // hiding a setting the user came looking for.
   const [autostartError, setAutostartError] = useState<string | null>(null)
+  const [silentStartEnabled, setSilentStartEnabled] = useState(false)
+  const [savingSilentStart, setSavingSilentStart] = useState(false)
 
   // Both halves of the update flow — "is a newer release out there" and the
   // in-flight download / install / restart lifecycle — live in the app-wide
@@ -255,7 +260,7 @@ export function SystemNetworkSettings() {
     setLoadError(null)
 
     try {
-      const [proxySettings, autostart] = await Promise.all([
+      const [proxySettings, autostart, silentStart] = await Promise.all([
         getSystemProxySettings(),
         // Kept out of the shared rejection path: a machine that cannot report
         // its login items must not blank out the proxy and language cards.
@@ -268,6 +273,18 @@ export function SystemNetworkSettings() {
               }
             )
           : Promise.resolve(null),
+        autostartVisible
+          ? getSystemSilentStartSettings().then(
+              (settings) => settings,
+              (err) => {
+                console.error(
+                  "[Settings] load silent start settings failed:",
+                  err
+                )
+                return null
+              }
+            )
+          : Promise.resolve(null),
       ])
 
       setEnabled(proxySettings.enabled)
@@ -277,6 +294,9 @@ export function SystemNetworkSettings() {
       if (autostart) {
         setAutostartEnabled(autostart.settings?.enabled ?? false)
         setAutostartError(autostart.error)
+      }
+      if (silentStart) {
+        setSilentStartEnabled(silentStart.silent_start)
       }
     } catch (err) {
       const message = toErrorMessage(err)
@@ -346,6 +366,22 @@ export function SystemNetworkSettings() {
         toast.error(t("autostartSaveFailed", { message }))
       } finally {
         setSavingAutostart(false)
+      }
+    },
+    [t]
+  )
+
+  const saveSilentStartSettings = useCallback(
+    async (next: boolean, prev: boolean) => {
+      setSavingSilentStart(true)
+      try {
+        await updateSystemSilentStartSettings({ silent_start: next })
+      } catch (err) {
+        setSilentStartEnabled(prev)
+        const message = toErrorMessage(err)
+        toast.error(t("silentStartSaveFailed", { message }))
+      } finally {
+        setSavingSilentStart(false)
       }
     },
     [t]
@@ -705,6 +741,27 @@ export function SystemNetworkSettings() {
               </p>
             )}
           </SettingsSection>
+        )}
+
+        {autostartVisible && (
+          <SettingsSection
+            icon={VolumeX}
+            title={t("silentStartTitle")}
+            description={t("silentStartDescription")}
+            htmlFor="silent-start"
+            control={
+              <Switch
+                id="silent-start"
+                checked={silentStartEnabled}
+                disabled={savingSilentStart}
+                onCheckedChange={(next) => {
+                  const prev = silentStartEnabled
+                  setSilentStartEnabled(next)
+                  void saveSilentStartSettings(next, prev)
+                }}
+              />
+            }
+          />
         )}
 
         <section className="rounded-xl border bg-card p-4 space-y-4">

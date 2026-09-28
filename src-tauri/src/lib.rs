@@ -1248,12 +1248,14 @@ mod tauri_app {
                 // Workspace state (open folders, opened tabs, active tab) is
                 // restored by the frontend via `list_open_folder_details` /
                 // `list_opened_tabs` inside the main window.
+                let silent_start = crate::preferences::load().silent_start;
                 if app.get_webview_window("main").is_none() {
                     let url = tauri::WebviewUrl::App(workspace_path.into());
                     let builder = tauri::WebviewWindowBuilder::new(app, "main", url)
                         .title("Codeg")
                         .inner_size(1260.0, 860.0)
-                        .min_inner_size(400.0, 600.0);
+                        .min_inner_size(400.0, 600.0)
+                        .visible(!silent_start);
                     let builder = windows::apply_platform_window_style(builder);
                     // The workspace title bar is taller than the shared default
                     // (it hosts the tab strips), so nudge the native macOS
@@ -1263,6 +1265,12 @@ mod tauri_app {
                         windows::workspace_window_traffic_light_position(),
                     );
                     if let Ok(w) = builder.build() {
+                        // window-state restores VISIBLE from the last run,
+                        // which would un-hide a silent start; re-assert after
+                        // the plugin's restore hook has run.
+                        if silent_start {
+                            let _ = w.hide();
+                        }
                         windows::post_window_setup(&w);
                     }
                 }
@@ -1715,7 +1723,9 @@ mod tauri_app {
                 project_boot::install_hyperframes_skills,
                 project_boot::create_hyperframes_project,
                 system_settings::get_system_proxy_settings,
-                system_settings::update_system_proxy_settings,
+                system_settings::update_system_rendering_settings,
+                system_settings::get_system_silent_start_settings,
+                system_settings::update_system_silent_start_settings,
                 system_settings::get_system_language_settings,
                 system_settings::update_system_language_settings,
                 system_settings::get_system_terminal_settings,

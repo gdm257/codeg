@@ -40,7 +40,9 @@ vi.mock("@/lib/api", () => ({
   updateSystemProxySettings: vi.fn(),
   updateSystemLanguageSettings: vi.fn(),
   getSystemAutostartSettings: vi.fn(),
+  getSystemSilentStartSettings: vi.fn(),
   updateSystemAutostartSettings: vi.fn(),
+  updateSystemSilentStartSettings: vi.fn(),
   // The System page now embeds <BackupSettings/>, which subscribes to backup
   // progress on mount and imports the backup API surface; stub it all.
   listenBackupProgress: vi.fn(async () => () => {}),
@@ -112,14 +114,18 @@ import zhTWMessages from "@/i18n/messages/zh-TW.json"
 import {
   getSystemAutostartSettings,
   getSystemProxySettings,
+  getSystemSilentStartSettings,
   updateSystemAutostartSettings,
   updateSystemProxySettings,
+  updateSystemSilentStartSettings,
 } from "@/lib/api"
 
 const mockGetProxy = vi.mocked(getSystemProxySettings)
 const mockSetProxy = vi.mocked(updateSystemProxySettings)
 const mockGetAutostart = vi.mocked(getSystemAutostartSettings)
 const mockSetAutostart = vi.mocked(updateSystemAutostartSettings)
+const mockGetSilentStart = vi.mocked(getSystemSilentStartSettings)
+const mockSetSilentStart = vi.mocked(updateSystemSilentStartSettings)
 
 // The settings page reads the update lifecycle from the app-wide UpdateProvider
 // (settings/layout.tsx wraps it in production), so the test must too.
@@ -140,6 +146,10 @@ beforeEach(() => {
   mockSetProxy.mockReset()
   mockGetAutostart.mockReset()
   mockSetAutostart.mockReset()
+  mockGetSilentStart.mockReset()
+  mockSetSilentStart.mockReset()
+  mockGetSilentStart.mockResolvedValue({ silent_start: false })
+  mockSetSilentStart.mockResolvedValue({ silent_start: false })
   desktopShell = false
   remoteWorkspace = false
   liveHandler = null
@@ -637,6 +647,39 @@ describe("SystemNetworkSettings — launch at login", () => {
       screen.getByDisplayValue("http://proxy.local:8080")
     ).toBeInTheDocument()
     expect(screen.queryByText(/Load failed/)).not.toBeInTheDocument()
+  })
+})
+
+describe("SystemNetworkSettings — silent start", () => {
+  beforeEach(() => {
+    mockGetProxy.mockResolvedValue({ enabled: false, proxy_url: null })
+    call.mockImplementation(liveServerCalls({ seq: 1, status: "idle" }))
+  })
+
+  it("hides the section outside the local desktop", async () => {
+    mockGetAutostart.mockResolvedValue({ enabled: false })
+
+    renderWithIntl()
+
+    await screen.findByRole("heading", { name: "Network Proxy" })
+    expect(screen.queryByLabelText("Silent start")).not.toBeInTheDocument()
+    expect(mockGetSilentStart).not.toHaveBeenCalled()
+  })
+
+  it("persists the toggle and reflects the stored value on reload", async () => {
+    desktopShell = true
+    mockGetAutostart.mockResolvedValue({ enabled: false })
+    mockGetSilentStart.mockResolvedValue({ silent_start: true })
+
+    renderWithIntl()
+
+    const silentStart = await screen.findByLabelText("Silent start")
+    expect(silentStart).toHaveAttribute("data-state", "checked")
+
+    fireEvent.click(silentStart)
+    await waitFor(() => expect(silentStart).not.toBeDisabled())
+    expect(mockSetSilentStart).toHaveBeenCalledWith({ silent_start: false })
+    expect(silentStart).toHaveAttribute("data-state", "unchecked")
   })
 })
 

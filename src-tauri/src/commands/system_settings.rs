@@ -12,7 +12,7 @@ use crate::db::AppDatabase;
 #[cfg(feature = "tauri-runtime")]
 use crate::models::{
     CloseWindowBehavior, SystemAutostartSettings, SystemCloseBehaviorSettings,
-    SystemCloseBehaviorSettingsView, SystemRenderingSettings,
+    SystemCloseBehaviorSettingsView, SystemRenderingSettings, SystemSilentStartSettings,
 };
 use crate::models::{
     AvailableTerminalShells, SystemLanguageSettings, SystemProxySettings, SystemTerminalSettings,
@@ -806,6 +806,29 @@ pub async fn update_system_rendering_settings(
     prefs.disable_hardware_acceleration = settings.disable_hardware_acceleration;
     preferences::save(&prefs).map_err(|err| {
         AppCommandError::io_error("Failed to persist rendering settings")
+            .with_detail(err.to_string())
+    })?;
+    Ok(settings)
+}
+
+#[cfg(feature = "tauri-runtime")]
+#[cfg_attr(feature = "tauri-runtime", tauri::command)]
+pub async fn get_system_silent_start_settings() -> Result<SystemSilentStartSettings, AppCommandError> {
+    let prefs = preferences::load();
+    Ok(SystemSilentStartSettings {
+        silent_start: prefs.silent_start,
+    })
+}
+
+#[cfg(feature = "tauri-runtime")]
+#[cfg_attr(feature = "tauri-runtime", tauri::command)]
+pub async fn update_system_silent_start_settings(
+    settings: SystemSilentStartSettings,
+) -> Result<SystemSilentStartSettings, AppCommandError> {
+    let mut prefs = preferences::load();
+    prefs.silent_start = settings.silent_start;
+    preferences::save(&prefs).map_err(|err| {
+        AppCommandError::io_error("Failed to persist silent start settings")
             .with_detail(err.to_string())
     })?;
     Ok(settings)

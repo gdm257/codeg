@@ -1,9 +1,9 @@
 //! User-scoped preferences stored at `~/.codeg/preferences.json`.
-//!
 //! These are settings that must be readable **before** the Tauri builder and
 //! tokio runtime start (e.g. the webview rendering flags applied via
 //! `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` on Windows and `WEBKIT_DISABLE_*`
-//! on Linux). All access is synchronous I/O so the data must stay tiny.
+//! on Linux, or "silent start" deciding whether the main window is built
+//! hidden). All access is synchronous I/O so the data must stay tiny.
 
 use std::fs;
 use std::io;
@@ -18,6 +18,7 @@ const CODEG_DIR_NAME: &str = ".codeg";
 #[serde(default)]
 pub struct AppPreferences {
     pub disable_hardware_acceleration: bool,
+    pub silent_start: bool,
 }
 
 pub fn preferences_file_path() -> Option<PathBuf> {

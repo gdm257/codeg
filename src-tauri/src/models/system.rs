@@ -166,6 +166,17 @@ pub struct SystemAutostartSettings {
     pub enabled: bool,
 }
 
+/// "Silent start": on cold launch keep the main window hidden and run from
+/// the tray. Lives in `~/.codeg/preferences.json` (not the database) because
+/// it must be known before the window is created; explicit relaunches still
+/// surface the window via the deep-link/single-instance path.
+#[cfg(feature = "tauri-runtime")]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+#[serde(default)]
+pub struct SystemSilentStartSettings {
+    pub silent_start: bool,
+}
+
 // --- Version Control ---
 
 /// Explicit credentials for a single git remote operation.

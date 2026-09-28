@@ -3802,6 +3802,10 @@ export interface SystemAutostartSettings {
   enabled: boolean
 }
 
+export interface SystemSilentStartSettings {
+  silent_start: boolean
+}
+
 /**
  * What the main window's close button does.
  *
