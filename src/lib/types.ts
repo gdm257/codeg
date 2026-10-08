@@ -453,6 +453,51 @@ export type FolderGroupChange =
 export const FOLDER_GROUP_CHANGED_EVENT = "folder-group://changed"
 
 /**
+ * A conversation tag: a label (name + one colour) the user can put on
+ * conversations, several per conversation.
+ *
+ * `folder_id` is the tag's scope: `null` for a GLOBAL tag, offered on every
+ * conversation (chat-mode ones included); otherwise the ROOT folder that owns
+ * it, offered only on that folder's conversations and its worktrees'. A
+ * worktree child never owns tags — creating one there lands on its root.
+ *
+ * `color` is always a normalized `#rrggbb`; both theme treatments are derived
+ * from it (see `tagChipStyle`). `sort_order` is the position within the scope.
+ */
+export interface ConversationTagDetail {
+  id: number
+  folder_id: number | null
+  name: string
+  color: string
+  sort_order: number
+}
+
+/**
+ * The branch tag: every conversation's `git_branch` drawn as a chip beside its
+ * tags — whether at all, and in which colour (normalized `#rrggbb`). One
+ * setting for the whole app. Mirrors the Rust `ConversationBranchTag`.
+ */
+export interface ConversationBranchTag {
+  enabled: boolean
+  color: string
+}
+
+/**
+ * Payload for `conversation-tag://changed` — tag DEFINITIONS, plus the branch
+ * tag setting. Which tags a conversation carries rides on
+ * `conversation://changed` instead (the summary's `tag_ids`). `reordered`
+ * carries nothing on purpose: re-read the list. Mirrors the Rust
+ * `ConversationTagChange` (serde `tag = "kind"`).
+ */
+export type ConversationTagChange =
+  | { kind: "upsert"; tag: ConversationTagDetail }
+  | { kind: "deleted"; id: number }
+  | { kind: "reordered" }
+  | { kind: "branch_tag"; setting: ConversationBranchTag }
+
+export const CONVERSATION_TAG_CHANGED_EVENT = "conversation-tag://changed"
+
+/**
  * Result of `createChatConversation`: the new conversation id plus the hidden
  * chat folder backing it, so the caller can drop the folder straight into
  * `allFolders` (resolving cwd / active-folder) without a refetch.
@@ -515,6 +560,14 @@ export interface DbConversationSummary {
    *  worktree path it originally ran in. Drives the "source worktree removed"
    *  badge. */
   origin_cwd?: string | null
+  /**
+   * Ids of the {@link ConversationTagDetail tags} on this conversation,
+   * ascending. Absent when it has none (the backend omits an empty list). May
+   * name a tag this client has already seen deleted — the tag-deleted broadcast
+   * is not followed by per-conversation upserts — so always resolve ids against
+   * the tag store and skip unknown ones rather than trusting the count.
+   */
+  tag_ids?: number[]
 }
 
 /** Payload for the global `conversation://changed` side-channel that keeps
@@ -2477,8 +2530,10 @@ export interface ToolCallImageWire {
  * launch card in-memory (rewriting its `[[codeg-background-task]]` marker via
  * `resolveBackgroundTask`) instead of a `refetchDetail` — which double-rendered
  * the #870-held turn and raced the transcript's last write. `tool_use_id` is
- * the launching tool call's id (`toolu_…`), NOT `task_id`; absent for a
- * background shell (no marker card to flip).
+ * the launching tool call's id (`toolu_…`), NOT `task_id`. A background shell's
+ * notification names its `Bash` call too, whose card has no marker to flip (the
+ * store leaves it alone); absent when the notification names no call (an MCP
+ * call moved to the background).
  */
 export interface BackgroundSettledInfo {
   task_id: string
@@ -2742,8 +2797,10 @@ export type AcpEvent =
        * `"session_unavailable"`, `"session_archived"`, or `"session_busy"`.
        *
        * The first three mean the session is gone. `"session_busy"` does not —
-       * another live session holds it (codex keeps the parent thread's writer
-       * after a fork), and it clears when that one closes.
+       * another live holder has it open (another Codex client — the app, the
+       * CLI or an IDE extension — or, for about a minute after a fork, the
+       * forking session, until codex unloads the parent it closed), and it
+       * clears when that one lets go.
        */
       code: string
     }

@@ -22,6 +22,8 @@ import {
   AppWorkspaceProvider,
   ConversationStatusEventBridge,
 } from "@/contexts/app-workspace-context"
+import { ConversationTagsSync } from "@/stores/conversation-tags-store"
+import { ConversationTagsManagerHost } from "@/components/conversations/conversation-tags-manager"
 import { useActiveFolder } from "@/contexts/active-folder-context"
 import { TaskProvider } from "@/contexts/task-context"
 import { AlertProvider } from "@/contexts/alert-context"
@@ -81,6 +83,7 @@ import {
   PetFocusBridge,
 } from "@/components/workspace/deep-link-bootstrap"
 import { WorkspaceOpenFolderListener } from "@/components/workspace/workspace-open-folder-listener"
+import { WorkspaceRestoreNotices } from "@/components/workspace/workspace-restore-notices"
 import { HeavyPluginsWarmup } from "@/components/ai-elements/heavy-plugins-warmup"
 import {
   ResizableHandle,
@@ -1303,6 +1306,14 @@ function WorkspaceLayoutInner({ children }: { children: React.ReactNode }) {
             <AcpConnectionsProvider>
               <DelegationProvider>
                 <ConversationStatusEventBridge />
+                {/* Tag definitions (names, colours) for every chip in this
+                    window; which tags a conversation carries rides on its
+                    summary instead. */}
+                <ConversationTagsSync />
+                {/* The tag manager, opened from tag pickers, folder menus and
+                    the sidebar's tag filter — all popovers or menus that
+                    unmount as they close, so none can host it. */}
+                <ConversationTagsManagerHost />
                 <ConversationRuntimeProvider>
                   <WorkspaceProvider>
                     <TabProvider>
@@ -1327,6 +1338,7 @@ function WorkspaceLayoutInner({ children }: { children: React.ReactNode }) {
                       <HeavyPluginsWarmup />
                       <DeepLinkBootstrap />
                       <PetFocusBridge />
+                      <WorkspaceRestoreNotices />
                       {/* Always mounted: external-change conflicts must be
                             resolvable even with the aux file tree closed. */}
                       <ExternalConflictDialog />
