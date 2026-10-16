@@ -128,6 +128,8 @@ const APP_OPTIONS: { value: McpAppType; label: string }[] = [
   { value: "deepseek", label: "DeepSeek Harness" },
   { value: "qoder", label: "Qoder" },
   { value: "antigravity", label: "Google Antigravity" },
+  { value: "kiro", label: "Kiro CLI" },
+  { value: "zcode", label: "ZCode" },
   // MCP-over-ACP 不是某个 agent 的配置文件：这些 server 是 codeg 自己的
   // store（mcp-over-acp.json），在会话启动时作为 session/new 的 mcpServers
   // 发给读它的 agent（自定义 ACP agent 的唯一 MCP 来源）。
@@ -322,6 +324,8 @@ function appsToDraft(apps: McpAppType[]): Record<McpAppType, boolean> {
     deepseek: appSet.has("deepseek"),
     qoder: appSet.has("qoder"),
     antigravity: appSet.has("antigravity"),
+    kiro: appSet.has("kiro"),
+    zcode: appSet.has("zcode"),
     pi: appSet.has("pi"),
     mcp_over_acp: appSet.has("mcp_over_acp"),
   }
@@ -698,6 +702,10 @@ export function McpSettings() {
         serverId: selectedLocal.id,
         spec: parsedSpec,
         apps,
+        // What the editor was loaded with — it is reset from this spec
+        // whenever the selection or the scan changes — so the backend can
+        // tell the fields the user edited from the ones they left alone.
+        shownSpec: selectedLocal.spec,
       })
       const next = await refreshLocalServers()
       toast.success(t("toasts.saveSuccess"))
