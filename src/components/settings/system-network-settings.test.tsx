@@ -43,6 +43,13 @@ vi.mock("@/lib/api", () => ({
   getSystemSilentStartSettings: vi.fn(),
   updateSystemAutostartSettings: vi.fn(),
   updateSystemSilentStartSettings: vi.fn(),
+  // <CliAccessSettings/> reads the command-line access switch on mount.
+  getCliAccessStatus: vi.fn(async () => ({
+    enabled: true,
+    running: true,
+    endpointFile: "/data/cli/endpoint-1.json",
+  })),
+  setCliAccessEnabled: vi.fn(),
   // The System page now embeds <BackupSettings/>, which subscribes to backup
   // progress on mount and imports the backup API surface; stub it all.
   listenBackupProgress: vi.fn(async () => () => {}),

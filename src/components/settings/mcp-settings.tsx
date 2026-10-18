@@ -134,6 +134,8 @@ const APP_OPTIONS: { value: McpAppType; label: string }[] = [
   // store（mcp-over-acp.json），在会话启动时作为 session/new 的 mcpServers
   // 发给读它的 agent（自定义 ACP agent 的唯一 MCP 来源）。
   { value: "mcp_over_acp", label: "MCP-over-ACP" },
+  { value: "trae", label: "TRAE CLI" },
+  { value: "command_code", label: "Command Code" },
   // pi 同理不作为可分配目标：读写的 ~/.pi/agent/mcp.json 属于第三方 pi 扩展，
   // pi 自身没有 MCP，pi-acp 也不转发线缆上的 mcpServers。给没装该扩展的用户
   // 写这个文件只会造出一个没人读的配置。存量 "pi" 条目照样能改能删——
@@ -326,6 +328,8 @@ function appsToDraft(apps: McpAppType[]): Record<McpAppType, boolean> {
     antigravity: appSet.has("antigravity"),
     kiro: appSet.has("kiro"),
     zcode: appSet.has("zcode"),
+    trae: appSet.has("trae"),
+    command_code: appSet.has("command_code"),
     pi: appSet.has("pi"),
     mcp_over_acp: appSet.has("mcp_over_acp"),
   }
