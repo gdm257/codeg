@@ -285,6 +285,21 @@ jobs:
               ;;
           esac
 
+      # Fork 构建不带更新签名私钥，保留 updater 配置会让 Tauri bundler
+      # 在 "A public key has been found, but no private key" 处失败；
+      # endpoint 指向上游 release，也会把 fork 安装原地升级成上游版本。
+      - name: Strip updater config for fork builds
+        shell: bash
+        run: |
+          node -e "
+          const fs = require('fs');
+          const p = 'src-tauri/tauri.conf.json';
+          const c = JSON.parse(fs.readFileSync(p, 'utf8'));
+          delete c.bundle.createUpdaterArtifacts;
+          delete c.plugins.updater;
+          fs.writeFileSync(p, JSON.stringify(c, null, 2) + '\n');
+          "
+
       - name: Build and upload to draft release (Linux arm64)
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         uses: tauri-apps/tauri-action@v0.6.1
