@@ -285,10 +285,14 @@ jobs:
               ;;
           esac
 
-      # Fork 构建不带更新签名私钥，保留 updater 配置会让 Tauri bundler
-      # 在 "A public key has been found, but no private key" 处失败；
+      # Fork 构建不带更新签名私钥，保留 updater artifacts 会让 Tauri
+      # bundler 在 "A public key has been found, but no private key" 处失败；
       # endpoint 指向上游 release，也会把 fork 安装原地升级成上游版本。
-      - name: Strip updater config for fork builds
+      # plugins.updater 不能整个删除：lib.rs 注册了 tauri_plugin_updater，
+      # 插件初始化把 plugins.updater 反序列化为 Config，缺 key 即 null，
+      # 桌面端启动即 panic（exit 101，无窗口无进程）。pubkey 是其必填
+      # 字段，保留；去掉 endpoints 后更新检查因无 endpoint 优雅失败。
+      - name: Neutralize updater config for fork builds
         shell: bash
         run: |
           node -e "
@@ -296,7 +300,9 @@ jobs:
           const p = 'src-tauri/tauri.conf.json';
           const c = JSON.parse(fs.readFileSync(p, 'utf8'));
           delete c.bundle.createUpdaterArtifacts;
-          delete c.plugins.updater;
+          const pubkey = c.plugins.updater && c.plugins.updater.pubkey;
+          if (!pubkey) throw new Error('plugins.updater.pubkey missing in tauri.conf.json');
+          c.plugins.updater = { pubkey };
           fs.writeFileSync(p, JSON.stringify(c, null, 2) + '\n');
           "
 
